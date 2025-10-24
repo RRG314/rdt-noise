@@ -1,0 +1,17 @@
+# RDT Noise Generator - Python Dependencies
+
+# Core requirements
+numpy>=1.20.0
+
+# Optional: For WAV file export
+scipy>=1.7.0
+
+# Optional: For visualization
+matplotlib>=3.3.0
+
+# Optional: For advanced audio analysis
+librosa>=0.9.0
+
+# Optional: For performance testing
+pytest>=6.2.0
+pytest-benchmark>=3.4.0

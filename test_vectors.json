@@ -1,0 +1,133 @@
+{
+  "description": "RDT Noise Test Vectors for Verification",
+  "version": "1.0.0",
+  "date": "2025-10-24",
+  
+  "standard_test": {
+    "description": "Paper-accurate RDT with standard parameters",
+    "parameters": {
+      "phi_scale": 1.0,
+      "delta_scale": 1.0,
+      "depth": 4,
+      "chaos": 0.0,
+      "variant": "standard"
+    },
+    "constants": {
+      "Rphi": 12.0,
+      "Rdelta": 14.696938456699069,
+      "phi": 1.6180339887498948,
+      "golden_ratio_inv_hex": "0x9E3779B9"
+    },
+    "expected_first_10_samples": [
+      0.0157,
+      -0.5020,
+      0.7412,
+      -0.3333,
+      0.9999,
+      -0.8823,
+      0.4431,
+      -0.1176,
+      0.6666,
+      -0.7647
+    ],
+    "expected_statistics": {
+      "entropy_min": 7.99,
+      "entropy_max": 8.01,
+      "rms_min": 0.55,
+      "rms_max": 0.60,
+      "mean": 0.0,
+      "mean_tolerance": 0.01
+    }
+  },
+  
+  "determinism_test": {
+    "description": "Test that same parameters produce identical output",
+    "parameters": {
+      "phi_scale": 1.0,
+      "delta_scale": 1.0,
+      "depth": 4,
+      "chaos": 0.0,
+      "variant": "standard",
+      "length": 1000
+    },
+    "test": "Generate twice, compare all samples, should be bit-exact match"
+  },
+  
+  "variant_tests": {
+    "description": "Test all 6 geometric variants",
+    "variants": [
+      "standard",
+      "double",
+      "split",
+      "harmonic",
+      "twisted",
+      "resonant"
+    ],
+    "parameters": {
+      "phi_scale": 1.0,
+      "delta_scale": 1.0,
+      "depth": 4,
+      "chaos": 0.0,
+      "length": 10000
+    },
+    "expected": {
+      "all_entropy_above": 7.98,
+      "variants_produce_different_output": true
+    }
+  },
+  
+  "depth_scaling_test": {
+    "description": "Test recursive depth scaling",
+    "depths": [1, 2, 3, 4, 5, 6, 8, 10],
+    "parameters": {
+      "phi_scale": 1.0,
+      "delta_scale": 1.0,
+      "chaos": 0.0,
+      "variant": "standard",
+      "length": 10000
+    },
+    "expected": {
+      "entropy_increases_with_depth": true,
+      "entropy_saturates_at_depth": 4
+    }
+  },
+  
+  "chaos_test": {
+    "description": "Test chaos injection breaks determinism",
+    "parameters": {
+      "phi_scale": 1.0,
+      "delta_scale": 1.0,
+      "depth": 4,
+      "variant": "standard",
+      "length": 1000
+    },
+    "chaos_values": [0.0, 0.3, 0.6, 1.0],
+    "expected": {
+      "chaos_0_deterministic": true,
+      "chaos_above_0_non_deterministic": true
+    }
+  },
+  
+  "initialization_state": {
+    "description": "π-based initialization constants",
+    "state_hex": [
+      "0x243F6A88", "0x85A308D3", "0x13198A2E", "0x03707344",
+      "0xA4093822", "0x299F31D0", "0x082EFA98", "0xEC4E6C89",
+      "0x452821E6", "0x38D01377", "0xBE5466CF", "0x34E90C6C",
+      "0xC0AC29B7", "0xC97C50DD", "0x3F84D5B5", "0xB5470917"
+    ],
+    "state_decimal": [
+      608135816, 2242054355, 320440878, 57694916,
+      2752067106, 699697872, 137138328, 3966566537,
+      1160258022, 951165559, 3195386063, 883997804,
+      3228714423, 3380361437, 1065670069, 3044370711
+    ]
+  },
+  
+  "notes": {
+    "tolerances": "Floating-point comparisons should use appropriate epsilon",
+    "determinism": "chaos=0 must produce bit-exact deterministic output",
+    "entropy": "Expected ~7.9999 bits/byte for depth >= 4",
+    "cross_platform": "All implementations should match these test vectors"
+  }
+}
