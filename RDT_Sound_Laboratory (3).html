@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDT Sound Laboratory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e0e0;
+            padding: 15px;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            scroll-behavior: smooth;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #88ccff;
+            margin-bottom: 20px;
+        }
+        
+        .layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1000px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(20, 30, 50, 0.9);
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel h2 {
+            color: #00ff88;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #00ff88;
+            padding-bottom: 8px;
+        }
+        
+        .slider-group {
+            margin-bottom: 18px;
+            padding: 12px;
+            background: rgba(10, 14, 39, 0.6);
+            border-radius: 8px;
+        }
+        
+        .slider-group label {
+            display: block;
+            color: #88ccff;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .slider-value {
+            float: right;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 40px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+        
+        input[type="range"]::-webkit-slider-track {
+            height: 8px;
+            background: linear-gradient(90deg, #1a3a5a 0%, #00ff88 100%);
+            border-radius: 4px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #00ff88;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+        }
+        
+        input[type="range"]::-moz-range-track {
+            height: 8px;
+            background: linear-gradient(90deg, #1a3a5a 0%, #00ff88 100%);
+            border-radius: 4px;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: #00ff88;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #1a2a3a;
+            color: #e0e0e0;
+            border: 2px solid #00ff88;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            color: #0a0e27;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background: linear-gradient(135deg, #88ccff 0%, #5599dd 100%);
+        }
+        
+        button.compare {
+            background: linear-gradient(135deg, #ff88cc 0%, #dd5599 100%);
+        }
+        
+        .engine-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .engine-btn {
+            padding: 12px;
+            background: #2a3a4a;
+            border: 2px solid #555;
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .engine-btn.active {
+            background: linear-gradient(135deg, #ff6b6b 0%, #cc5555 100%);
+            border-color: #ff6b6b;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+        
+        .status {
+            text-align: center;
+            padding: 12px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        canvas {
+            width: 100%;
+            background: #0a0e27;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #00ff88;
+        }
+        
+        .canvas-3d {
+            height: 400px;
+            cursor: grab;
+        }
+        
+        .canvas-3d:active {
+            cursor: grabbing;
+        }
+        
+        .canvas-2d {
+            height: 200px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .comparison-card {
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid #88ccff;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .comparison-card h3 {
+            color: #88ccff;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        
+        .comparison-card canvas {
+            height: 150px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: rgba(10, 14, 39, 0.6);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            color: #88ccff;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            color: #00ff88;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .view-toggle button {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .preset-grid button {
+            padding: 10px;
+            font-size: 0.85em;
+        }
+        
+        .info-box {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 4px solid #00ff88;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.85em;
+            color: #88ccff;
+        }
+        
+        .warning-box {
+            background: rgba(255, 107, 107, 0.1);
+            border-left: 4px solid #ff6b6b;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.85em;
+            color: #ffcccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 RDT Sound Laboratory</h1>
+        <div class="subtitle">Explore Pure Recursive Division Tree Audio</div>
+        
+        <div id="status" class="status hidden">Ready</div>
+        
+        <div class="layout">
+            <!-- Left Panel: Controls -->
+            <div>
+                <div class="panel">
+                    <h2>🎚️ Sound Engine</h2>
+                    <div class="engine-selector">
+                        <button class="engine-btn active" onclick="setEngine('rdt')" id="btn-rdt">
+                            Pure RDT
+                        </button>
+                        <button class="engine-btn" onclick="setEngine('simple')" id="btn-simple">
+                            Simple
+                        </button>
+                    </div>
+                    <div class="info-box">
+                        <strong>Pure RDT:</strong> True recursive field algorithm with 64-bit precision
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>🎮 Controls</h2>
+                    <button onclick="playSound()">▶️ Generate & Play</button>
+                    <button class="secondary" onclick="stopSound()">⏹️ Stop</button>
+                    <button class="compare" onclick="compareEngines()">🔬 Compare Engines</button>
+                    <button class="secondary" onclick="morphPresets()">🌈 Morph Presets</button>
+                    <button class="secondary" onclick="randomize()">🎲 Randomize</button>
+                </div>
+                
+                <div class="panel">
+                    <h2>⚙️ RDT Parameters</h2>
+                    
+                    <div class="slider-group">
+                        <label>
+                            φ-scale (RPHI)
+                            <span class="slider-value" id="phi-val">1.00</span>
+                        </label>
+                        <input type="range" id="phi" min="50" max="150" value="100">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Δ-scale (RDELTA)
+                            <span class="slider-value" id="delta-val">1.00</span>
+                        </label>
+                        <input type="range" id="delta" min="50" max="150" value="100">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Recursion Depth
+                            <span class="slider-value" id="depth-val">4</span>
+                        </label>
+                        <input type="range" id="depth" min="1" max="10" value="4">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Chaos Injection
+                            <span class="slider-value" id="chaos-val">0.00</span>
+                        </label>
+                        <input type="range" id="chaos" min="0" max="100" value="0">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>Spectral Color</label>
+                        <select id="color">
+                            <option value="flat">Flat (None)</option>
+                            <option value="white">White Noise</option>
+                            <option value="pink">Pink Noise (1/f)</option>
+                            <option value="brown">Brown Noise (1/f²)</option>
+                            <option value="blue">Blue Noise (f)</option>
+                            <option value="violet">Violet Noise (f²)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Duration
+                            <span class="slider-value" id="duration-val">2.0s</span>
+                        </label>
+                        <input type="range" id="duration" min="10" max="50" value="20">
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>🔬 Advanced RDT</h2>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Rotation Amount
+                            <span class="slider-value" id="rotation-val">17</span>
+                        </label>
+                        <input type="range" id="rotation" min="1" max="31" value="17">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Mix Rate
+                            <span class="slider-value" id="mixrate-val">23</span>
+                        </label>
+                        <input type="range" id="mixrate" min="1" max="31" value="23">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Field Coupling
+                            <span class="slider-value" id="coupling-val">0.50</span>
+                        </label>
+                        <input type="range" id="coupling" min="0" max="100" value="50">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            State Feedback
+                            <span class="slider-value" id="feedback-val">1.00</span>
+                        </label>
+                        <input type="range" id="feedback" min="0" max="200" value="100">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>
+                            Nonlinearity
+                            <span class="slider-value" id="nonlinear-val">1.00</span>
+                        </label>
+                        <input type="range" id="nonlinear" min="0" max="200" value="100">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>RDT Variant</label>
+                        <select id="variant">
+                            <option value="standard">Standard RDT</option>
+                            <option value="double">Double Field</option>
+                            <option value="split">Split State</option>
+                            <option value="harmonic">Harmonic Mode</option>
+                            <option value="twisted">Twisted Field</option>
+                            <option value="resonant">Resonant</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>🎯 Presets</h2>
+                    <div class="preset-grid">
+                        <button onclick="loadPreset('pure')">🔷 Pure RDT</button>
+                        <button onclick="loadPreset('deep')">🔊 Deep Field</button>
+                        <button onclick="loadPreset('crystal')">💎 Crystal</button>
+                        <button onclick="loadPreset('chaos')">🌪️ Chaos</button>
+                        <button onclick="loadPreset('pink')">🌸 Pink RDT</button>
+                        <button onclick="loadPreset('brown')">🟤 Brown RDT</button>
+                        <button onclick="loadPreset('harmonic')">🎵 Harmonic</button>
+                        <button onclick="loadPreset('twisted')">🌀 Twisted</button>
+                        <button onclick="loadPreset('resonant')">📡 Resonant</button>
+                        <button onclick="loadPreset('minimal')">◽ Minimal</button>
+                        <button onclick="loadPreset('maximal')">⬛ Maximal</button>
+                        <button onclick="loadPreset('ocean')">🌊 Ocean</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Visualizations -->
+            <div>
+                <div class="panel">
+                    <h2>📊 Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Engine</div>
+                            <div class="stat-value" id="stat-engine">RDT</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Peak Freq</div>
+                            <div class="stat-value" id="stat-peak">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">RMS</div>
+                            <div class="stat-value" id="stat-rms">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Crest</div>
+                            <div class="stat-value" id="stat-crest">--</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📈 Visualizations</h2>
+                    <div class="view-toggle">
+                        <button class="active" onclick="setView('2d')" id="view-2d">2D Views</button>
+                        <button onclick="setView('3d')" id="view-3d">3D Waterfall</button>
+                        <button onclick="setView('compare')" id="view-compare">Compare</button>
+                    </div>
+                    
+                    <div id="view-2d-content">
+                        <h3 style="color: #88ccff; margin: 15px 0 10px 0;">Waveform</h3>
+                        <canvas id="waveform" class="canvas-2d"></canvas>
+                        
+                        <h3 style="color: #88ccff; margin: 15px 0 10px 0;">Frequency Spectrum</h3>
+                        <canvas id="spectrum" class="canvas-2d"></canvas>
+                        
+                        <h3 style="color: #88ccff; margin: 15px 0 10px 0;">Spectrogram</h3>
+                        <canvas id="spectrogram" class="canvas-2d"></canvas>
+                    </div>
+                    
+                    <div id="view-3d-content" class="hidden">
+                        <h3 style="color: #88ccff; margin: 15px 0 10px 0;">3D Spectral Waterfall (Drag to Rotate)</h3>
+                        <canvas id="waterfall" class="canvas-3d"></canvas>
+                        <div class="info-box">
+                            Click and drag to rotate • Scroll to zoom
+                        </div>
+                    </div>
+                    
+                    <div id="view-compare-content" class="hidden">
+                        <div class="comparison-grid">
+                            <div class="comparison-card">
+                                <h3>Pure RDT Engine</h3>
+                                <canvas id="compare-rdt"></canvas>
+                            </div>
+                            <div class="comparison-card">
+                                <h3>Simple Engine</h3>
+                                <canvas id="compare-simple"></canvas>
+                            </div>
+                        </div>
+                        <div class="warning-box">
+                            Comparison shows spectral differences between engines with same parameters
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================================
+        // Global State
+        // ============================================================
+        
+        let audioContext = null;
+        let currentSource = null;
+        let currentEngine = 'rdt';
+        let currentView = '2d';
+        let lastAudioData = null;
+        let rotation3D = { x: 0.5, y: 0.3, zoom: 1 };
+        let isDragging = false;
+        let lastMouse = { x: 0, y: 0 };
+        
+        const RPHI0 = 12.0;
+        const RDELTA0 = 6 * Math.sqrt(6);
+        
+        // ============================================================
+        // Utility Functions
+        // ============================================================
+        
+        function showStatus(msg, duration = 2000) {
+            const el = document.getElementById('status');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), duration);
+        }
+        
+        function updateValues() {
+            document.getElementById('phi-val').textContent = (document.getElementById('phi').value / 100).toFixed(2);
+            document.getElementById('delta-val').textContent = (document.getElementById('delta').value / 100).toFixed(2);
+            document.getElementById('depth-val').textContent = document.getElementById('depth').value;
+            document.getElementById('chaos-val').textContent = (document.getElementById('chaos').value / 100).toFixed(2);
+            document.getElementById('duration-val').textContent = (document.getElementById('duration').value / 10).toFixed(1) + 's';
+            
+            // Advanced parameters
+            if (document.getElementById('rotation')) {
+                document.getElementById('rotation-val').textContent = document.getElementById('rotation').value;
+            }
+            if (document.getElementById('mixrate')) {
+                document.getElementById('mixrate-val').textContent = document.getElementById('mixrate').value;
+            }
+            if (document.getElementById('coupling')) {
+                document.getElementById('coupling-val').textContent = (document.getElementById('coupling').value / 100).toFixed(2);
+            }
+            if (document.getElementById('feedback')) {
+                document.getElementById('feedback-val').textContent = (document.getElementById('feedback').value / 100).toFixed(2);
+            }
+            if (document.getElementById('nonlinear')) {
+                document.getElementById('nonlinear-val').textContent = (document.getElementById('nonlinear').value / 100).toFixed(2);
+            }
+        }
+        
+        function setEngine(engine) {
+            currentEngine = engine;
+            document.getElementById('btn-rdt').classList.toggle('active', engine === 'rdt');
+            document.getElementById('btn-simple').classList.toggle('active', engine === 'simple');
+            document.getElementById('stat-engine').textContent = engine === 'rdt' ? 'RDT' : 'Simple';
+        }
+        
+        function setView(view) {
+            console.log('🖼️ setView called with:', view);
+            currentView = view;
+            
+            // Update button states
+            ['2d', '3d', 'compare'].forEach(v => {
+                const btn = document.getElementById('view-' + v);
+                const content = document.getElementById('view-' + v + '-content');
+                
+                if (btn) {
+                    btn.classList.toggle('active', v === view);
+                    console.log('Button view-' + v + ':', v === view ? 'active' : 'inactive');
+                }
+                
+                if (content) {
+                    content.classList.toggle('hidden', v !== view);
+                    console.log('Content view-' + v + '-content:', v !== view ? 'hidden' : 'visible');
+                } else {
+                    console.warn('Content element not found: view-' + v + '-content');
+                }
+            });
+            
+            // Render appropriate visualization
+            if (lastAudioData) {
+                console.log('Rendering for view:', view, '(has audio data)');
+                if (view === '2d') {
+                    drawWaveform(lastAudioData);
+                    drawSpectrum(lastAudioData);
+                    drawSpectrogram(lastAudioData);
+                } else if (view === '3d') {
+                    setTimeout(() => draw3DWaterfall(lastAudioData), 100);
+                } else if (view === 'compare') {
+                    console.log('Compare view - waiting for user to click Compare Engines button');
+                }
+            } else {
+                console.log('No audio data to render');
+            }
+            
+            console.log('✅ View switched to:', view);
+        }
+        
+        // ============================================================
+        // Pure RDT Engine (TRUE IMPLEMENTATION)
+        // ============================================================
+        
+        function generateRDTNoise(length, phiScale, deltaScale, depth, chaos) {
+            const RPHI = RPHI0 * phiScale;
+            const RDELTA = RDELTA0 * deltaScale;
+            
+            // Get advanced parameters
+            const rotation = parseInt(document.getElementById('rotation')?.value || 17);
+            const mixrate = parseInt(document.getElementById('mixrate')?.value || 23);
+            const coupling = parseFloat(document.getElementById('coupling')?.value || 50) / 100;
+            const feedback = parseFloat(document.getElementById('feedback')?.value || 100) / 100;
+            const nonlinear = parseFloat(document.getElementById('nonlinear')?.value || 100) / 100;
+            const variant = document.getElementById('variant')?.value || 'standard';
+            
+            // Initialize state with mathematical constants (true RDT)
+            let S = new Uint32Array([
+                0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344,
+                0xA4093822, 0x299F31D0, 0x082EFA98, 0xEC4E6C89,
+                0x452821E6, 0x38D01377, 0xBE5466CF, 0x34E90C6C,
+                0xC0AC29B7, 0xC97C50DD, 0x3F84D5B5, 0xB5470917
+            ]);
+            
+            const samples = new Float32Array(length);
+            
+            // RDT field evolution
+            for (let r = 0; r < depth; r++) {
+                // Extract L and R states
+                const L = S.slice(0, 8);
+                const R = S.slice(8, 16);
+                
+                // Variant-specific processing
+                let a, b, c, d;
+                
+                switch(variant) {
+                    case 'double':
+                        // Double field - use both halves independently
+                        a = (L[0] ^ R[1]) >>> 0;
+                        b = (L[2] + R[3]) >>> 0;
+                        c = (R[0] ^ L[3]) >>> 0;
+                        d = (L[1] + R[2]) >>> 0;
+                        const a2 = (L[4] ^ R[5]) >>> 0;
+                        const b2 = (L[6] + R[7]) >>> 0;
+                        a = (a + a2) >>> 0;
+                        b = (b + b2) >>> 0;
+                        break;
+                        
+                    case 'split':
+                        // Split state - different operations per half
+                        a = (L[0] + R[1]) >>> 0;
+                        b = (L[2] ^ R[3]) >>> 0;
+                        c = (R[0] + L[3]) >>> 0;
+                        d = (L[1] ^ R[2]) >>> 0;
+                        break;
+                        
+                    case 'harmonic':
+                        // Harmonic mode - use modulo to create periodicity
+                        a = ((L[0] ^ R[1]) % 65521) >>> 0;
+                        b = ((L[2] + R[3]) % 65521) >>> 0;
+                        c = ((R[0] ^ L[3]) % 65521) >>> 0;
+                        d = ((L[1] + R[2]) % 65521) >>> 0;
+                        break;
+                        
+                    case 'twisted':
+                        // Twisted field - asymmetric mixing
+                        a = (L[0] ^ R[7]) >>> 0;
+                        b = (L[3] + R[4]) >>> 0;
+                        c = (R[2] ^ L[5]) >>> 0;
+                        d = (L[6] + R[1]) >>> 0;
+                        break;
+                        
+                    case 'resonant':
+                        // Resonant - feedback with previous state
+                        a = (L[0] ^ R[1] ^ (r > 0 ? S[0] : 0)) >>> 0;
+                        b = (L[2] + R[3] + (r > 0 ? S[2] : 0)) >>> 0;
+                        c = (R[0] ^ L[3] ^ (r > 0 ? S[8] : 0)) >>> 0;
+                        d = (L[1] + R[2] + (r > 0 ? S[9] : 0)) >>> 0;
+                        break;
+                        
+                    default: // standard
+                        a = (L[0] ^ R[1]) >>> 0;
+                        b = (L[2] + R[3]) >>> 0;
+                        c = (R[0] ^ L[3]) >>> 0;
+                        d = (L[1] + R[2]) >>> 0;
+                }
+                
+                // Apply coupling factor
+                const g0 = Math.imul(a, b | 1) >>> 0;
+                const g1 = Math.imul(c, d | 1) >>> 0;
+                
+                // Use configurable rotation amounts
+                const g = (rotl32(g0, rotation) ^ rotl32(g1, mixrate) ^ (r + 1)) >>> 0;
+                
+                // Generate feedback array F
+                const F = new Uint32Array(8);
+                for (let j = 0; j < 8; j++) {
+                    const t = (R[j] ^ L[j]) >>> 0;
+                    const base = (R[j] + Math.floor(RPHI * coupling) * L[j] + 
+                                 Math.floor(RDELTA * coupling) * t + g) >>> 0;
+                    
+                    // Add field-dependent sinusoidal component with nonlinearity
+                    const phase = ((L[j] ^ R[j]) >>> 0) % 512;
+                    const sinVal = Math.sin(phase * Math.PI / 256 * nonlinear);
+                    const frac = Math.floor((sinVal + 1) * 0x7FFFFFFF) >>> 0;
+                    
+                    let v = (base + frac + (g << ((j * 3 + r) & 31))) >>> 0;
+                    v = (v ^ Math.imul(v, (j + 1) * (r + 1))) >>> 0;
+                    
+                    // Apply feedback scaling
+                    const rotAmount = Math.floor((r * 13 + j * 11) * feedback) & 31;
+                    F[j] = rotl32(v ^ Math.imul(v, v), rotAmount);
+                }
+                
+                // Update state: S = [R, L ⊕ F]
+                const newS = new Uint32Array(16);
+                for (let i = 0; i < 8; i++) {
+                    newS[i] = R[i];
+                    newS[i + 8] = (L[i] ^ F[i]) >>> 0;
+                }
+                
+                // Permute and add golden ratio constant
+                for (let i = 0; i < 16; i++) {
+                    S[i] = (newS[(i + 1) % 16] ^ 0x9E3779B9) >>> 0;
+                }
+                
+                // Apply chaos if requested
+                if (chaos > 0) {
+                    for (let i = 0; i < 16; i++) {
+                        const noise = Math.floor(Math.random() * 256);
+                        S[i] = (S[i] ^ (noise & Math.floor(chaos * 255))) >>> 0;
+                    }
+                }
+            }
+            
+            // Convert state to audio samples
+            for (let i = 0; i < length; i++) {
+                const idx = i % 16;
+                const byte = (S[idx] >> ((i % 4) * 8)) & 0xFF;
+                samples[i] = (byte / 127.5) - 1.0;
+            }
+            
+            return samples;
+        }
+        
+        function rotl32(x, n) {
+            return ((x << n) | (x >>> (32 - n))) >>> 0;
+        }
+        
+        // ============================================================
+        // Simple Engine (For Comparison)
+        // ============================================================
+        
+        function generateSimpleNoise(length, seed) {
+            const samples = new Float32Array(length);
+            let x = seed;
+            
+            for (let i = 0; i < length; i++) {
+                x = (x * 1664525 + 1013904223) >>> 0;
+                samples[i] = (x / 0xFFFFFFFF) * 2 - 1;
+            }
+            
+            return samples;
+        }
+        
+        // ============================================================
+        // Color Filters
+        // ============================================================
+        
+        function applyColorFilter(data, mode) {
+            if (mode === 'flat' || mode === 'white') return data;
+            
+            const filtered = new Float32Array(data.length);
+            const n = data.length;
+            
+            switch(mode) {
+                case 'pink':
+                    let b0 = 0, b1 = 0, b2 = 0;
+                    for (let i = 0; i < n; i++) {
+                        b0 = 0.99886 * b0 + data[i] * 0.0555179;
+                        b1 = 0.99332 * b1 + data[i] * 0.0750759;
+                        b2 = 0.96900 * b2 + data[i] * 0.1538520;
+                        filtered[i] = b0 + b1 + b2 + data[i] * 0.3104856;
+                    }
+                    break;
+                    
+                case 'brown':
+                    let acc = 0;
+                    for (let i = 0; i < n; i++) {
+                        acc += data[i] * 0.02;
+                        filtered[i] = acc;
+                        acc *= 0.998;
+                    }
+                    break;
+                    
+                case 'blue':
+                    filtered[0] = data[0];
+                    for (let i = 1; i < n; i++) {
+                        filtered[i] = data[i] - data[i-1] * 0.95;
+                    }
+                    break;
+                    
+                case 'violet':
+                    filtered[0] = 0;
+                    filtered[1] = data[1] - data[0];
+                    for (let i = 2; i < n; i++) {
+                        filtered[i] = data[i] - 2 * data[i-1] + data[i-2];
+                    }
+                    break;
+                    
+                default:
+                    return data;
+            }
+            
+            // Normalize
+            let max = 0;
+            for (let i = 0; i < n; i++) {
+                max = Math.max(max, Math.abs(filtered[i]));
+            }
+            if (max > 0) {
+                for (let i = 0; i < n; i++) {
+                    filtered[i] /= max;
+                }
+            }
+            
+            return filtered;
+        }
+        
+        // ============================================================
+        // Audio Generation
+        // ============================================================
+        
+        function generateAudio() {
+            const phi = document.getElementById('phi').value / 100;
+            const delta = document.getElementById('delta').value / 100;
+            const depth = parseInt(document.getElementById('depth').value);
+            const chaos = document.getElementById('chaos').value / 100;
+            const color = document.getElementById('color').value;
+            const duration = document.getElementById('duration').value / 10;
+            
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const sampleRate = audioContext.sampleRate;
+            const samples = Math.floor(sampleRate * duration);
+            
+            let data;
+            
+            if (currentEngine === 'rdt') {
+                data = generateRDTNoise(samples, phi, delta, depth, chaos);
+            } else {
+                const seed = Math.floor((phi * 1000 + delta * 2000) * 12345);
+                data = generateSimpleNoise(samples, seed);
+                
+                if (chaos > 0) {
+                    for (let i = 0; i < samples; i++) {
+                        const noise = Math.random() * 2 - 1;
+                        data[i] = data[i] * (1 - chaos) + noise * chaos;
+                    }
+                }
+            }
+            
+            // Apply color filter
+            data = applyColorFilter(data, color);
+            
+            // Normalize
+            let max = 0;
+            for (let i = 0; i < samples; i++) {
+                max = Math.max(max, Math.abs(data[i]));
+            }
+            if (max > 0) {
+                for (let i = 0; i < samples; i++) {
+                    data[i] = data[i] / max * 0.8;
+                }
+            }
+            
+            return data;
+        }
+        
+        function playSound() {
+            showStatus('🎵 Generating ' + (currentEngine === 'rdt' ? 'Pure RDT' : 'Simple') + ' sound...', 3000);
+            
+            setTimeout(() => {
+                try {
+                    const data = generateAudio();
+                    lastAudioData = data;
+                    
+                    // Update visualizations based on current view
+                    updateStats(data);
+                    
+                    if (currentView === '2d') {
+                        drawWaveform(data);
+                        drawSpectrum(data);
+                        drawSpectrogram(data);
+                    } else if (currentView === '3d') {
+                        // Small delay for canvas to be visible
+                        setTimeout(() => draw3DWaterfall(data), 100);
+                    }
+                    // Don't update compare view on normal play
+                    
+                    // Play audio
+                    if (currentSource) {
+                        currentSource.stop();
+                    }
+                    
+                    const buffer = audioContext.createBuffer(1, data.length, audioContext.sampleRate);
+                    const channelData = buffer.getChannelData(0);
+                    channelData.set(data);
+                    
+                    currentSource = audioContext.createBufferSource();
+                    currentSource.buffer = buffer;
+                    currentSource.connect(audioContext.destination);
+                    currentSource.start();
+                    
+                    showStatus('▶️ Playing!', 2000);
+                } catch (e) {
+                    console.error('Error:', e);
+                    showStatus('❌ Error generating sound');
+                }
+            }, 100);
+        }
+        
+        function stopSound() {
+            if (currentSource) {
+                currentSource.stop();
+                currentSource = null;
+                showStatus('⏹️ Stopped', 1000);
+            }
+        }
+        
+        // ============================================================
+        // Statistics
+        // ============================================================
+        
+        function updateStats(data) {
+            // RMS
+            let rms = 0;
+            for (let i = 0; i < data.length; i++) {
+                rms += data[i] * data[i];
+            }
+            rms = Math.sqrt(rms / data.length);
+            
+            // Peak and Crest Factor
+            let peak = 0;
+            for (let i = 0; i < data.length; i++) {
+                peak = Math.max(peak, Math.abs(data[i]));
+            }
+            const crest = peak / (rms + 1e-10);
+            
+            // Estimate dominant frequency (zero-crossing)
+            let crossings = 0;
+            for (let i = 1; i < data.length; i++) {
+                if ((data[i-1] < 0 && data[i] >= 0) || (data[i-1] >= 0 && data[i] < 0)) {
+                    crossings++;
+                }
+            }
+            const freq = (crossings / 2) * audioContext.sampleRate / data.length;
+            
+            document.getElementById('stat-peak').textContent = freq.toFixed(0) + 'Hz';
+            document.getElementById('stat-rms').textContent = rms.toFixed(3);
+            document.getElementById('stat-crest').textContent = crest.toFixed(2);
+        }
+        
+        // ============================================================
+        // 2D Visualizations
+        // ============================================================
+        
+        function drawWaveform(data) {
+            const canvas = document.getElementById('waveform');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const step = Math.floor(data.length / canvas.width);
+            const centerY = canvas.height / 2;
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const i = x * step;
+                const y = centerY - data[i] * centerY * 0.9;
+                
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+            
+            // Center line
+            ctx.strokeStyle = 'rgba(136, 204, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+        }
+        
+        function drawSpectrum(data) {
+            const canvas = document.getElementById('spectrum');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Simple spectrum via autocorrelation
+            const bins = 200;
+            const spectrum = new Float32Array(bins);
+            
+            for (let b = 0; b < bins; b++) {
+                const lag = Math.floor(b * data.length / bins / 4);
+                let corr = 0;
+                const samples = Math.min(1000, data.length - lag);
+                
+                for (let i = 0; i < samples; i++) {
+                    corr += data[i] * data[i + lag];
+                }
+                spectrum[b] = Math.abs(corr / samples);
+            }
+            
+            // Draw
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let max = 0;
+            for (let i = 0; i < bins; i++) {
+                max = Math.max(max, spectrum[i]);
+            }
+            
+            for (let i = 0; i < bins; i++) {
+                const x = (i / bins) * canvas.width;
+                const y = canvas.height - (spectrum[i] / max) * canvas.height * 0.9;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(136, 204, 255, 0.2)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = (i / 4) * canvas.height;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+        
+        function drawSpectrogram(data) {
+            const canvas = document.getElementById('spectrogram');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const windowSize = 512;
+            const hopSize = 128;
+            const numWindows = Math.min(canvas.width, Math.floor((data.length - windowSize) / hopSize));
+            
+            for (let w = 0; w < numWindows; w++) {
+                const start = w * hopSize;
+                const window = data.slice(start, start + windowSize);
+                
+                // Simple energy per frequency band
+                const bands = 50;
+                for (let b = 0; b < bands; b++) {
+                    const freqStart = Math.floor(b * windowSize / bands);
+                    const freqEnd = Math.floor((b + 1) * windowSize / bands);
+                    
+                    let energy = 0;
+                    for (let i = freqStart; i < freqEnd && i < window.length; i++) {
+                        energy += window[i] * window[i];
+                    }
+                    energy = Math.sqrt(energy / (freqEnd - freqStart));
+                    
+                    const x = (w / numWindows) * canvas.width;
+                    const y = canvas.height - ((b + 1) / bands) * canvas.height;
+                    const height = canvas.height / bands;
+                    
+                    const intensity = Math.min(1, energy * 10);
+                    const r = Math.floor(intensity * 255);
+                    const g = Math.floor(intensity * 255 * 0.5);
+                    const b_color = Math.floor((1 - intensity) * 100);
+                    
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b_color})`;
+                    ctx.fillRect(x, y, canvas.width / numWindows + 1, height + 1);
+                }
+            }
+        }
+        
+        // ============================================================
+        // 3D Waterfall
+        // ============================================================
+        
+        function draw3DWaterfall(data) {
+            const canvas = document.getElementById('waterfall');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const windowSize = 512;
+            const hopSize = 256;
+            const maxWindows = 40;
+            const numWindows = Math.min(maxWindows, Math.floor((data.length - windowSize) / hopSize));
+            
+            const spectra = [];
+            for (let w = 0; w < numWindows; w++) {
+                const start = w * hopSize;
+                const window = data.slice(start, start + windowSize);
+                
+                const spectrum = [];
+                for (let i = 0; i < 80; i++) {
+                    let val = 0;
+                    const samples = 5;
+                    for (let j = 0; j < samples; j++) {
+                        const idx = i * samples + j;
+                        if (idx < window.length) {
+                            val += Math.abs(window[idx]);
+                        }
+                    }
+                    spectrum.push(val / samples);
+                }
+                spectra.push(spectrum);
+            }
+            
+            // 3D projection
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 100 * rotation3D.zoom;
+            
+            const cosX = Math.cos(rotation3D.x);
+            const sinX = Math.sin(rotation3D.x);
+            const cosY = Math.cos(rotation3D.y);
+            const sinY = Math.sin(rotation3D.y);
+            
+            for (let t = 0; t < numWindows; t++) {
+                const spectrum = spectra[t];
+                
+                ctx.strokeStyle = `hsl(${180 + t * 180 / numWindows}, 70%, 50%)`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                let first = true;
+                
+                for (let f = 0; f < spectrum.length; f++) {
+                    const x = (f - 40) * 0.8;
+                    const y = spectrum[f] * 30;
+                    const z = (t - numWindows / 2) * 2;
+                    
+                    // Rotate
+                    let x1 = x;
+                    let y1 = y * cosX - z * sinX;
+                    let z1 = y * sinX + z * cosX;
+                    
+                    let x2 = x1 * cosY + z1 * sinY;
+                    let y2 = y1;
+                    let z2 = -x1 * sinY + z1 * cosY;
+                    
+                    // Project
+                    const perspective = 1 / (1 + z2 / 500);
+                    const screenX = cx + x2 * scale * perspective;
+                    const screenY = cy - y2 * scale * perspective;
+                    
+                    if (first) {
+                        ctx.moveTo(screenX, screenY);
+                        first = false;
+                    } else {
+                        ctx.lineTo(screenX, screenY);
+                    }
+                }
+                
+                ctx.stroke();
+            }
+        }
+        
+        // ============================================================
+        // Comparison Mode
+        // ============================================================
+        
+        function compareEngines() {
+            console.log('🔬 Compare Engines called');
+            showStatus('🔬 Comparing engines...', 3000);
+            
+            // Switch to compare view first
+            console.log('Switching to compare view...');
+            setView('compare');
+            
+            setTimeout(() => {
+                try {
+                    console.log('Starting comparison generation...');
+                    
+                    const phi = document.getElementById('phi').value / 100;
+                    const delta = document.getElementById('delta').value / 100;
+                    const depth = parseInt(document.getElementById('depth').value);
+                    const chaos = document.getElementById('chaos').value / 100;
+                    const color = document.getElementById('color').value;
+                    
+                    console.log('Parameters:', { phi, delta, depth, chaos, color });
+                    
+                    if (!audioContext) {
+                        console.log('Creating audio context...');
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    
+                    const sampleRate = audioContext.sampleRate;
+                    const samples = Math.floor(sampleRate * 2);
+                    console.log('Generating', samples, 'samples at', sampleRate, 'Hz');
+                    
+                    // Generate RDT
+                    console.log('Generating RDT noise...');
+                    const rdtData = generateRDTNoise(samples, phi, delta, depth, chaos);
+                    console.log('RDT generated:', rdtData.length, 'samples');
+                    
+                    // Generate Simple
+                    console.log('Generating Simple noise...');
+                    const seed = Math.floor((phi * 1000 + delta * 2000) * 12345);
+                    let simpleData = generateSimpleNoise(samples, seed);
+                    console.log('Simple generated:', simpleData.length, 'samples');
+                    
+                    if (chaos > 0) {
+                        console.log('Applying chaos to Simple...');
+                        for (let i = 0; i < samples; i++) {
+                            const noise = Math.random() * 2 - 1;
+                            simpleData[i] = simpleData[i] * (1 - chaos) + noise * chaos;
+                        }
+                    }
+                    
+                    // Apply same color filter
+                    console.log('Applying color filters...');
+                    const rdtFiltered = applyColorFilter(rdtData, color);
+                    const simpleFiltered = applyColorFilter(simpleData, color);
+                    console.log('Filters applied');
+                    
+                    // Draw comparisons
+                    console.log('Drawing RDT comparison...');
+                    drawComparisonWaveform('compare-rdt', rdtFiltered);
+                    console.log('Drawing Simple comparison...');
+                    drawComparisonWaveform('compare-simple', simpleFiltered);
+                    console.log('Comparisons drawn');
+                    
+                    showStatus('✅ Comparison ready!', 2000);
+                    console.log('✅ Comparison complete!');
+                    
+                } catch (e) {
+                    console.error('❌ Compare error:', e);
+                    showStatus('❌ Comparison failed: ' + e.message, 3000);
+                }
+            }, 100);
+        }
+        
+        function drawComparisonWaveform(canvasId, data) {
+            console.log('🎨 Drawing comparison for:', canvasId, 'with', data.length, 'samples');
+            
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error('❌ Canvas not found:', canvasId);
+                return;
+            }
+            
+            console.log('Canvas found:', canvasId, 'size:', canvas.offsetWidth, 'x', canvas.offsetHeight);
+            
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            console.log('Canvas dimensions set:', canvas.width, 'x', canvas.height);
+            
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Waveform
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            
+            const step = Math.floor(data.length / canvas.width);
+            const centerY = canvas.height / 2;
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const i = x * step;
+                const y = centerY - data[i] * centerY * 0.8;
+                
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+            console.log('✅ Waveform drawn for:', canvasId);
+            
+            // Prevent scroll on these canvases
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, { passive: false });
+        }
+        
+        // ============================================================
+        // Presets
+        // ============================================================
+        
+        function loadPreset(name) {
+            const presets = {
+                pure: { 
+                    engine: 'rdt', phi: 100, delta: 100, depth: 4, chaos: 0, color: 'flat',
+                    rotation: 17, mixrate: 23, coupling: 50, feedback: 100, nonlinear: 100, variant: 'standard'
+                },
+                deep: { 
+                    engine: 'rdt', phi: 70, delta: 130, depth: 8, chaos: 0, color: 'flat',
+                    rotation: 17, mixrate: 23, coupling: 80, feedback: 120, nonlinear: 100, variant: 'standard'
+                },
+                crystal: { 
+                    engine: 'rdt', phi: 140, delta: 80, depth: 2, chaos: 0, color: 'white',
+                    rotation: 11, mixrate: 19, coupling: 30, feedback: 80, nonlinear: 100, variant: 'standard'
+                },
+                chaos: { 
+                    engine: 'rdt', phi: 120, delta: 120, depth: 10, chaos: 50, color: 'flat',
+                    rotation: 29, mixrate: 31, coupling: 70, feedback: 150, nonlinear: 150, variant: 'standard'
+                },
+                pink: { 
+                    engine: 'rdt', phi: 100, delta: 100, depth: 5, chaos: 0, color: 'pink',
+                    rotation: 17, mixrate: 23, coupling: 50, feedback: 100, nonlinear: 100, variant: 'standard'
+                },
+                brown: { 
+                    engine: 'rdt', phi: 90, delta: 110, depth: 6, chaos: 0, color: 'brown',
+                    rotation: 17, mixrate: 23, coupling: 60, feedback: 100, nonlinear: 100, variant: 'standard'
+                },
+                harmonic: {
+                    engine: 'rdt', phi: 100, delta: 100, depth: 5, chaos: 0, color: 'flat',
+                    rotation: 13, mixrate: 17, coupling: 50, feedback: 100, nonlinear: 80, variant: 'harmonic'
+                },
+                twisted: {
+                    engine: 'rdt', phi: 110, delta: 90, depth: 6, chaos: 10, color: 'flat',
+                    rotation: 19, mixrate: 29, coupling: 60, feedback: 130, nonlinear: 120, variant: 'twisted'
+                },
+                resonant: {
+                    engine: 'rdt', phi: 95, delta: 105, depth: 7, chaos: 0, color: 'pink',
+                    rotation: 17, mixrate: 23, coupling: 70, feedback: 150, nonlinear: 100, variant: 'resonant'
+                },
+                minimal: {
+                    engine: 'rdt', phi: 100, delta: 100, depth: 1, chaos: 0, color: 'flat',
+                    rotation: 7, mixrate: 11, coupling: 20, feedback: 50, nonlinear: 50, variant: 'standard'
+                },
+                maximal: {
+                    engine: 'rdt', phi: 150, delta: 150, depth: 10, chaos: 80, color: 'violet',
+                    rotation: 31, mixrate: 31, coupling: 100, feedback: 200, nonlinear: 200, variant: 'double'
+                },
+                ocean: {
+                    engine: 'rdt', phi: 80, delta: 120, depth: 8, chaos: 20, color: 'brown',
+                    rotation: 13, mixrate: 19, coupling: 70, feedback: 110, nonlinear: 90, variant: 'resonant'
+                }
+            };
+            
+            const p = presets[name];
+            if (!p) return;
+            
+            setEngine(p.engine);
+            document.getElementById('phi').value = p.phi;
+            document.getElementById('delta').value = p.delta;
+            document.getElementById('depth').value = p.depth;
+            document.getElementById('chaos').value = p.chaos;
+            document.getElementById('color').value = p.color;
+            
+            // Set advanced parameters
+            if (document.getElementById('rotation')) {
+                document.getElementById('rotation').value = p.rotation;
+                document.getElementById('mixrate').value = p.mixrate;
+                document.getElementById('coupling').value = p.coupling;
+                document.getElementById('feedback').value = p.feedback;
+                document.getElementById('nonlinear').value = p.nonlinear;
+                document.getElementById('variant').value = p.variant;
+            }
+            
+            updateValues();
+            showStatus('Loaded preset: ' + name, 1500);
+            
+            setTimeout(() => playSound(), 500);
+        }
+        
+        // ============================================================
+        // 3D Mouse Controls
+        // ============================================================
+        
+        const waterfall = document.getElementById('waterfall');
+        
+        waterfall.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouse = { x: e.clientX, y: e.clientY };
+        });
+        
+        waterfall.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dx = e.clientX - lastMouse.x;
+                const dy = e.clientY - lastMouse.y;
+                
+                rotation3D.y += dx * 0.01;
+                rotation3D.x += dy * 0.01;
+                
+                lastMouse = { x: e.clientX, y: e.clientY };
+                
+                if (lastAudioData) {
+                    draw3DWaterfall(lastAudioData);
+                }
+            }
+        });
+        
+        waterfall.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        waterfall.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            rotation3D.zoom *= (1 - e.deltaY * 0.0005);
+            rotation3D.zoom = Math.max(0.5, Math.min(2, rotation3D.zoom));
+            
+            if (lastAudioData) {
+                requestAnimationFrame(() => draw3DWaterfall(lastAudioData));
+            }
+        }, { passive: false });
+        
+        // ============================================================
+        // Special Features
+        // ============================================================
+        
+        function morphPresets() {
+            showStatus('🌈 Morphing between presets...', 10000);
+            
+            const presetNames = ['pure', 'deep', 'crystal', 'harmonic', 'twisted', 'resonant'];
+            let currentIdx = 0;
+            
+            const morphInterval = setInterval(() => {
+                if (currentIdx >= presetNames.length) {
+                    clearInterval(morphInterval);
+                    showStatus('✅ Morph complete!', 2000);
+                    return;
+                }
+                
+                loadPreset(presetNames[currentIdx]);
+                currentIdx++;
+            }, 3000);
+        }
+        
+        function randomize() {
+            showStatus('🎲 Randomizing parameters...', 2000);
+            
+            const phi = 50 + Math.floor(Math.random() * 100);
+            const delta = 50 + Math.floor(Math.random() * 100);
+            const depth = 1 + Math.floor(Math.random() * 10);
+            const chaos = Math.floor(Math.random() * 100);
+            const rotation = 1 + Math.floor(Math.random() * 31);
+            const mixrate = 1 + Math.floor(Math.random() * 31);
+            const coupling = Math.floor(Math.random() * 100);
+            const feedback = Math.floor(Math.random() * 200);
+            const nonlinear = Math.floor(Math.random() * 200);
+            
+            const colors = ['flat', 'white', 'pink', 'brown', 'blue', 'violet'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            const variants = ['standard', 'double', 'split', 'harmonic', 'twisted', 'resonant'];
+            const variant = variants[Math.floor(Math.random() * variants.length)];
+            
+            document.getElementById('phi').value = phi;
+            document.getElementById('delta').value = delta;
+            document.getElementById('depth').value = depth;
+            document.getElementById('chaos').value = chaos;
+            document.getElementById('color').value = color;
+            
+            if (document.getElementById('rotation')) {
+                document.getElementById('rotation').value = rotation;
+                document.getElementById('mixrate').value = mixrate;
+                document.getElementById('coupling').value = coupling;
+                document.getElementById('feedback').value = feedback;
+                document.getElementById('nonlinear').value = nonlinear;
+                document.getElementById('variant').value = variant;
+            }
+            
+            updateValues();
+            
+            setTimeout(() => playSound(), 500);
+        }
+        
+        // ============================================================
+        // Initialize
+        // ============================================================
+        
+        function init() {
+            updateValues();
+            
+            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                slider.addEventListener('input', updateValues);
+                slider.addEventListener('change', updateValues);
+            });
+            
+            // Prevent wheel scroll on all canvases except waterfall (which needs it for zoom)
+            const canvases2d = ['waveform', 'spectrum', 'spectrogram', 'compare-rdt', 'compare-simple'];
+            canvases2d.forEach(id => {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    canvas.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, { passive: false });
+                }
+            });
+            
+            showStatus('🔬 RDT Sound Laboratory Ready', 2000);
+        }
+        
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
