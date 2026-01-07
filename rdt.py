@@ -74,109 +74,115 @@ def generate_rdt_noise(
     F = INIT_STATE.copy()
     F_prev = F.copy()
     
-    # Recursive diffusion loop
-    for n in range(depth):
-        # Split state into left (L) and right (R) halves
-        L = F[:8].copy()
-        R = F[8:].copy()
-        
-        # Compute local difference operator Δₙ
-        delta = np.zeros(16, dtype=np.uint32)
-        for i in range(16):
-            diff = np.uint32(F[i] - F_prev[i])
-            grad = np.uint32(F_prev[(i + 1) % 16] - F_prev[i])
-            phi_term = np.uint32(grad / PHI)
-            delta[i] = np.uint32(diff + phi_term)
-        
-        # Compute energy Eₙ with variant-specific coupling
-        E = np.zeros(16, dtype=np.uint32)
-        for i in range(8):
-            # Variant-specific field coupling
-            if variant == "standard":
-                coupling = np.uint32(L[i] ^ R[i])
-            elif variant == "double":
-                c1 = np.uint32(L[i] ^ R[i])
-                c2 = np.uint32(L[(i+4)%8] ^ R[(i+4)%8])
-                coupling = np.uint32(c1 + c2)
-            elif variant == "split":
-                if i % 2 == 0:
-                    coupling = np.uint32(L[i] + R[i])
-                else:
-                    coupling = np.uint32(L[i] ^ R[i])
-            elif variant == "harmonic":
-                coupling = np.uint32((L[i] ^ R[i]) % 65521)
-            elif variant == "twisted":
-                coupling = np.uint32(L[i] ^ R[(8-i-1)%8])
-            elif variant == "resonant":
-                coupling = np.uint32(L[i] ^ R[i] ^ F_prev[i])
-            else:
-                coupling = np.uint32(L[i] ^ R[i])  # Default to standard
-            
-            # Compute energy for both halves
-            E[i] = np.uint32(
-                int(Rphi) * F_prev[i] +
-                int(Rdelta) * delta[i] +
-                coupling
-            )
-            E[i + 8] = np.uint32(
-                int(Rphi) * F_prev[i + 8] +
-                int(Rdelta) * delta[i + 8] +
-                coupling
-            )
-        
-        # Compute phase Φₙ
-        Phi = np.zeros(16, dtype=np.uint32)
-        for i in range(16):
-            # Prevent division by zero
-            sin_term = np.sin(E[i] / max(Rdelta, 1e-10))
-            cos_term = np.cos(E[i] / max(Rphi, 1e-10))
-            phase = sin_term + cos_term
-            
-            # Map phase [-2, 2] to rotation amount [0, 31]
-            Phi[i] = np.uint32(int(((phase + 2.0) / 4.0) * 31.0) & 31)
-        
-        # Apply diffusion operator D[Fₙ]
-        F_next = np.zeros(16, dtype=np.uint32)
-        for i in range(16):
-            rot_amount = int((Phi[i] + n * 17 + i * 23) & 31)
-            rotated = rotl32(E[i], rot_amount)
-            F_next[i] = np.uint32(F_prev[i] ^ rotated)
-        
-        # Golden ratio permutation
-        for i in range(16):
-            F_next[i] = np.uint32(F_next[(i + 1) % 16] ^ GOLDEN_RATIO_INV)
-        
-        # Optional chaos injection
-        if chaos > 0.0:
-            for i in range(16):
-                noise = np.random.randint(0, 256, dtype=np.uint32)
-                chaos_mask = np.uint32(int(chaos * 255))
-                F_next[i] = np.uint32(F_next[i] ^ (noise & chaos_mask))
-        
-        # Update for next iteration
-        F_prev = F.copy()
-        F = F_next.copy()
-    
-    # Convert state to audio samples
+    # Allocate output samples
     samples = np.zeros(length, dtype=np.float32)
-    byte_index = 0
-    
-    for i in range(length):
-        word_index = byte_index % 16
-        byte_in_word = (byte_index // 16) % 4
-        
-        # Extract byte
-        byte_val = (F[word_index] >> (byte_in_word * 8)) & 0xFF
-        
-        # Convert to [-1.0, 1.0]
-        samples[i] = (byte_val / 127.5) - 1.0
-        
-        byte_index += 1
-        
-        # Refresh state if needed (cycle through state)
-        if byte_index >= 64:  # 16 words * 4 bytes
-            byte_index = 0
-    
+
+    # Generate samples in blocks using streaming approach
+    # This maintains continuous diffusion instead of cycling through same bytes
+    block_size = 64  # 16 words * 4 bytes
+    samples_generated = 0
+
+    while samples_generated < length:
+        # Recursive diffusion loop for this block
+        for n in range(depth):
+            # Split state into left (L) and right (R) halves
+            L = F[:8].copy()
+            R = F[8:].copy()
+
+            # Compute local difference operator Δₙ
+            delta = np.zeros(16, dtype=np.uint32)
+            for i in range(16):
+                diff = np.uint32(F[i] - F_prev[i])
+                grad = np.uint32(F_prev[(i + 1) % 16] - F_prev[i])
+                phi_term = np.uint32(grad / PHI)
+                delta[i] = np.uint32(diff + phi_term)
+
+            # Compute energy Eₙ with variant-specific coupling
+            E = np.zeros(16, dtype=np.uint32)
+            for i in range(8):
+                # Variant-specific field coupling
+                if variant == "standard":
+                    coupling = np.uint32(L[i] ^ R[i])
+                elif variant == "double":
+                    c1 = np.uint32(L[i] ^ R[i])
+                    c2 = np.uint32(L[(i+4)%8] ^ R[(i+4)%8])
+                    coupling = np.uint32(c1 + c2)
+                elif variant == "split":
+                    if i % 2 == 0:
+                        coupling = np.uint32(L[i] + R[i])
+                    else:
+                        coupling = np.uint32(L[i] ^ R[i])
+                elif variant == "harmonic":
+                    coupling = np.uint32((L[i] ^ R[i]) % 65521)
+                elif variant == "twisted":
+                    coupling = np.uint32(L[i] ^ R[(8-i-1)%8])
+                elif variant == "resonant":
+                    coupling = np.uint32(L[i] ^ R[i] ^ F_prev[i])
+                else:
+                    coupling = np.uint32(L[i] ^ R[i])  # Default to standard
+
+                # Compute energy for both halves
+                E[i] = np.uint32(
+                    int(Rphi) * F_prev[i] +
+                    int(Rdelta) * delta[i] +
+                    coupling
+                )
+                E[i + 8] = np.uint32(
+                    int(Rphi) * F_prev[i + 8] +
+                    int(Rdelta) * delta[i + 8] +
+                    coupling
+                )
+
+            # Compute phase Φₙ
+            Phi = np.zeros(16, dtype=np.uint32)
+            for i in range(16):
+                # Prevent division by zero
+                sin_term = np.sin(E[i] / max(Rdelta, 1e-10))
+                cos_term = np.cos(E[i] / max(Rphi, 1e-10))
+                phase = sin_term + cos_term
+
+                # Map phase [-2, 2] to rotation amount [0, 31]
+                Phi[i] = np.uint32(int(((phase + 2.0) / 4.0) * 31.0) & 31)
+
+            # Apply diffusion operator D[Fₙ]
+            F_next = np.zeros(16, dtype=np.uint32)
+            for i in range(16):
+                rot_amount = int((Phi[i] + n * 17 + i * 23) & 31)
+                rotated = rotl32(E[i], rot_amount)
+                F_next[i] = np.uint32(F_prev[i] ^ rotated)
+
+            # Golden ratio permutation
+            for i in range(16):
+                F_next[i] = np.uint32(F_next[(i + 1) % 16] ^ GOLDEN_RATIO_INV)
+
+            # Optional chaos injection
+            if chaos > 0.0:
+                for i in range(16):
+                    noise = np.random.randint(0, 256, dtype=np.uint32)
+                    chaos_mask = np.uint32(int(chaos * 255))
+                    F_next[i] = np.uint32(F_next[i] ^ (noise & chaos_mask))
+
+            # Update for next iteration
+            F_prev = F.copy()
+            F = F_next.copy()
+
+        # Extract samples from current state
+        samples_in_block = min(block_size, length - samples_generated)
+
+        for byte_idx in range(samples_in_block):
+            word_index = byte_idx % 16
+            byte_in_word = (byte_idx // 16) % 4
+
+            # Extract byte
+            byte_val = (F[word_index] >> (byte_in_word * 8)) & 0xFF
+
+            # Convert to [-1.0, 1.0]
+            samples[samples_generated] = (byte_val / 127.5) - 1.0
+            samples_generated += 1
+
+        # State F carries forward to next block (streaming)
+        # This maintains continuous diffusion instead of cycling
+
     return samples
 
 
