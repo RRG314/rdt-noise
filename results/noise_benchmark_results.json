@@ -4,8 +4,8 @@
   "results": [
     {
       "name": "rdt_standard",
-      "time_ms_mean": 315.95954166065593,
-      "time_ms_min": 308.99766701622866,
+      "time_ms_mean": 317.1755279957627,
+      "time_ms_min": 308.7029170128517,
       "entropy_bits_per_byte": 7.99164753921684,
       "acf_lag1": -0.0024053044617176056,
       "acf_mean_abs_1_32": 0.0016746072501518938,
@@ -14,8 +14,8 @@
     },
     {
       "name": "rdt_chaos_seeded",
-      "time_ms_mean": 328.85880566512543,
-      "time_ms_min": 327.06566600245424,
+      "time_ms_mean": 330.3466526752648,
+      "time_ms_min": 326.9058750011027,
       "entropy_bits_per_byte": 7.991528182910969,
       "acf_lag1": -0.0018220579950138927,
       "acf_mean_abs_1_32": 0.0014908006110090355,
@@ -24,8 +24,8 @@
     },
     {
       "name": "rdt_hybrid_fast",
-      "time_ms_mean": 166.3470973241298,
-      "time_ms_min": 165.5730839993339,
+      "time_ms_mean": 176.60313899978064,
+      "time_ms_min": 173.46770799485967,
       "entropy_bits_per_byte": 7.991523381462832,
       "acf_lag1": 0.0027451650239527225,
       "acf_mean_abs_1_32": 0.0016017933827114916,
@@ -34,8 +34,8 @@
     },
     {
       "name": "white_uniform",
-      "time_ms_mean": 1.7399863378765683,
-      "time_ms_min": 1.296458998695016,
+      "time_ms_mean": 1.5400970005430281,
+      "time_ms_min": 1.2214579910505563,
       "entropy_bits_per_byte": 7.993648422209476,
       "acf_lag1": 0.000700912089087069,
       "acf_mean_abs_1_32": 0.0016978084289576145,
@@ -44,8 +44,8 @@
     },
     {
       "name": "white_pink_filtered",
-      "time_ms_mean": 4.916125336118664,
-      "time_ms_min": 4.676250013289973,
+      "time_ms_mean": 4.856625009172906,
+      "time_ms_min": 4.688750021159649,
       "entropy_bits_per_byte": 7.023011784819325,
       "acf_lag1": 0.8667150139808655,
       "acf_mean_abs_1_32": 0.6543722432106733,
@@ -54,10 +54,10 @@
     }
   ],
   "findings": {
-    "rdt_vs_white_speed_ratio": 181.58736926994743,
+    "rdt_vs_white_speed_ratio": 205.9451631189001,
     "rdt_vs_white_entropy_delta": -0.0020008829926361216,
     "rdt_vs_white_acf_abs_delta": -2.32011788057207e-05,
-    "hybrid_speedup_vs_rdt": 1.899399188463169,
+    "hybrid_speedup_vs_rdt": 1.7959789944399385,
     "hybrid_entropy_delta_vs_rdt": -0.00012415775400764772,
     "hybrid_acf_abs_delta_vs_rdt": -7.281386744040219e-05
   }
